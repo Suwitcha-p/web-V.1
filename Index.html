@@ -15,8 +15,11 @@
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; overflow-x: hidden; }
         .app-container { max-width: 440px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; position: relative; box-shadow: 0 0 25px rgba(0,0,0,0.15); display: flex; flex-direction: column; }
         .hide { display: none !important; }
-        .bottom-nav-active { color: #165C7D; font-weight: 600; }
-        .bottom-nav-inactive { color: #9ca3af; }
+        
+        /* Nav active status style */
+        .bottom-nav-active { color: #003853; font-weight: 700; transform: scale(1.05); }
+        .bottom-nav-inactive { color: #9ca3af; font-weight: 400; }
+
         a[href^="https://www.netlify.com"] { display: none !important; }
 
         /* Custom Markers */
@@ -34,7 +37,7 @@
 
 <div class="app-container">
 
-    <!-- ==================== BANNER แจ้งเตือนหลุม (สั่น + ป๊อบอัพ) ==================== -->
+    <!-- BANNER แจ้งเตือนหลุมระยะกระชั้นชิด -->
     <div id="vibration-alert-banner" class="fixed top-4 left-1/2 transform -translate-x-1/2 w-11/12 max-w-sm bg-red-600 text-white p-4 rounded-2xl shadow-2xl z-[999999] hide flex items-center gap-3 border-2 border-white animate-bounce">
         <div class="text-2xl bg-white text-red-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -46,11 +49,11 @@
         <button onclick="closeVibeAlert()" class="ml-auto text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
     </div>
 
-    <!-- ==================== PAGE 1: เลือกบทบาท (ROLE SELECTION) ==================== -->
+    <!-- PAGE 1: ROLE SELECTION -->
     <div id="page-role" class="flex flex-col min-h-screen bg-[#003853] text-white p-6 justify-between">
         <div class="pt-10">
             <div class="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mb-6 border border-white/20">
-                <i class="fa-solid fa-[#165C7D] fa-road-barrier text-2xl text-white"></i>
+                <i class="fa-solid fa-road-barrier text-2xl text-white"></i>
             </div>
             <p class="text-xs tracking-widest text-blue-200 font-semibold uppercase">Khon Kaen University</p>
             <h1 class="text-4xl font-extrabold tracking-tight mt-1 mb-4">KKU Road Alert</h1>
@@ -62,7 +65,6 @@
         <div class="bg-white rounded-3xl p-6 text-gray-800 shadow-2xl space-y-4 mb-6">
             <h2 class="text-lg font-bold text-gray-900">เลือกบทบาทเพื่อเริ่มต้นใช้งาน</h2>
             
-            <!-- ปุ่ม ประชาชน / นักศึกษา -->
             <button onclick="selectRole('user')" class="w-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 rounded-2xl p-4 flex items-center justify-between text-left transition group">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-[#008ba3] text-white rounded-xl flex items-center justify-center text-xl shadow-md">
@@ -76,7 +78,6 @@
                 <i class="fa-solid fa-chevron-right text-gray-400"></i>
             </button>
 
-            <!-- ปุ่ม เจ้าหน้าที่ภาครัฐ -->
             <button onclick="selectRole('officer')" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl p-4 flex items-center justify-between text-left transition group">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-slate-800 text-white rounded-xl flex items-center justify-center text-xl shadow-md">
@@ -92,7 +93,7 @@
         </div>
     </div>
 
-    <!-- ==================== APP WRAPPER: ฝั่งประชาชน ==================== -->
+    <!-- APP WRAPPER: USER -->
     <div id="page-user-app" class="hide flex-col flex-grow min-h-screen">
         <div class="bg-[#003853] text-white px-5 py-4 flex justify-between items-center shadow-md">
             <div>
@@ -108,13 +109,10 @@
         <div id="tab-user-home" class="user-tab flex-grow p-5 space-y-5">
             <div class="bg-gradient-to-r from-blue-900 to-[#165C7D] rounded-2xl p-4 text-white shadow-md flex justify-between items-center">
                 <div>
-                    <span class="bg-blue-400/30 text-blue-100 text-[10px] px-2.5 py-0.5 rounded-full border border-blue-300/30">GPS Active</span>
-                    <h2 class="text-base font-bold mt-1">ติดตามตำแหน่งเรียลไทม์</h2>
+                    <span class="bg-blue-400/30 text-blue-100 text-[10px] px-2.5 py-0.5 rounded-full border border-blue-300/30">GPS Real-time Active</span>
+                    <h2 class="text-base font-bold mt-1">กำลังติดตามตำแหน่งของคุณ</h2>
                     <p id="user-gps-text" class="text-xs text-blue-100 mt-0.5"><i class="fa-solid fa-spinner fa-spin mr-1"></i> กำลังจับพิกัดของคุณ...</p>
                 </div>
-                <button onclick="triggerTestVibration()" class="bg-red-500 text-white text-xs px-3 py-2 rounded-xl shadow font-semibold">
-                    <i class="fa-solid fa-bell mr-1"></i> ทดสอบเตือน
-                </button>
             </div>
 
             <div class="bg-white rounded-2xl p-3 border border-gray-200 shadow-sm space-y-2">
@@ -189,15 +187,27 @@
         </div>
 
         <!-- BOTTOM NAV -->
-        <div class="bg-white border-t border-gray-200 flex justify-around py-2 px-4 sticky bottom-0 shadow-lg z-50">
-            <button onclick="switchUserTab('home')" class="user-nav-btn bottom-nav-active flex flex-col items-center"><i class="fa-solid fa-house text-lg"></i><span class="text-[10px]">หน้าหลัก</span></button>
-            <button onclick="switchUserTab('map')" class="user-nav-btn bottom-nav-inactive flex flex-col items-center"><i class="fa-solid fa-map-location-dot text-lg"></i><span class="text-[10px]">แผนที่</span></button>
-            <button onclick="switchUserTab('report')" class="user-nav-btn bottom-nav-inactive flex flex-col items-center"><i class="fa-solid fa-circle-plus text-lg"></i><span class="text-[10px]">แจ้งปัญหา</span></button>
-            <button onclick="switchUserTab('reports')" class="user-nav-btn bottom-nav-inactive flex flex-col items-center"><i class="fa-solid fa-list-check text-lg"></i><span class="text-[10px]">รายการแจ้ง</span></button>
+        <div class="bg-white border-t border-gray-200 flex justify-around py-2.5 px-4 sticky bottom-0 shadow-lg z-50">
+            <button id="nav-btn-home" onclick="switchUserTab('home')" class="user-nav-btn bottom-nav-active flex flex-col items-center transition-all">
+                <i class="fa-solid fa-house text-lg mb-0.5"></i>
+                <span class="text-[10px]">หน้าหลัก</span>
+            </button>
+            <button id="nav-btn-map" onclick="switchUserTab('map')" class="user-nav-btn bottom-nav-inactive flex flex-col items-center transition-all">
+                <i class="fa-solid fa-map-location-dot text-lg mb-0.5"></i>
+                <span class="text-[10px]">แผนที่</span>
+            </button>
+            <button id="nav-btn-report" onclick="switchUserTab('report')" class="user-nav-btn bottom-nav-inactive flex flex-col items-center transition-all">
+                <i class="fa-solid fa-circle-plus text-lg mb-0.5"></i>
+                <span class="text-[10px]">แจ้งปัญหา</span>
+            </button>
+            <button id="nav-btn-reports" onclick="switchUserTab('reports')" class="user-nav-btn bottom-nav-inactive flex flex-col items-center transition-all">
+                <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
+                <span class="text-[10px]">รายการแจ้ง</span>
+            </button>
         </div>
     </div>
 
-    <!-- ==================== PAGE 2: ฝั่งเจ้าหน้าที่ (OFFICER DASHBOARD) ==================== -->
+    <!-- PAGE 2: OFFICER DASHBOARD -->
     <div id="page-officer" class="hide flex-col flex-grow min-h-screen bg-[#f0f4f8]">
         <div class="bg-[#003853] text-white px-5 pt-6 pb-6 rounded-b-3xl shadow-md flex justify-between items-start">
             <div>
@@ -239,7 +249,7 @@
         </div>
     </div>
 
-    <!-- ==================== PAGE 3: ตรวจสอบเรื่องร้องเรียน (OFFICER DETAIL) ==================== -->
+    <!-- PAGE 3: OFFICER DETAIL -->
     <div id="page-officer-detail" class="hide flex-col flex-grow min-h-screen bg-[#f0f4f8]">
         <div class="bg-white px-4 py-3 flex items-center gap-3 border-b sticky top-0 z-50">
             <button onclick="closeOfficerDetail()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600"><i class="fa-solid fa-arrow-left"></i></button>
@@ -287,11 +297,10 @@
 </div>
 
 <script>
-    // ================= การตั้งค่า Google Sheets =================
-    // วาง URL ของ Google Apps Script ที่ได้จากการ Deploy Web App ตรงนี้
+    // URL สำหรับ Google Apps Script
     const GOOGLE_WEB_APP_URL = "ใส่_URL_ของ_GOOGLE_APPS_SCRIPT_ที่นี่"; 
 
-    // ================= DATA STORES =================
+    // DATA STORES
     let reportsData = [
         {
             id: "KKU-631235", title: "ถนนทรุด", severity: "ระดับ 4", status: "กำลังซ่อมแซม",
@@ -305,16 +314,28 @@
     let selectedLat = userLat, selectedLon = userLon;
     let activeTicketId = null;
     let mapHome, mapUserFull, mapOfficer, mapReportMini, mapModalPick, markerReportMini, markerModalPick;
+    let homeMarkersGroup, fullMapMarkersGroup, officerMarkersGroup;
+    let userMarkerHome, userMarkerFull;
+    let syncInterval = null;
+
     const satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     const createIcon = (color) => L.divIcon({ className: 'custom-div-icon', html: `<div class="marker-pin pin-${color}"></div>`, iconSize: [30, 42], iconAnchor: [15, 42] });
+    
+    // ไอคอนตำแหน่งปัจจุบันของผู้ใช้
+    const userLocationIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div class="w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-lg animate-ping"></div><div class="w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-lg absolute top-0 left-0"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+    });
 
-    // ================= โหลดข้อมูลจาก Google Sheets =================
+    // ================= FETCH & SYNC DATA =================
     async function fetchReportsFromSheets() {
-        if(GOOGLE_WEB_APP_URL.includes("ใส่_URL")) return; // ถ้ายังไม่ใส่ URL จะใช้ข้อมูลจำลองไปก่อน
+        if(GOOGLE_WEB_APP_URL.includes("ใส่_URL")) return;
         try {
             const response = await fetch(GOOGLE_WEB_APP_URL + "?action=read");
             const data = await response.json();
-            if(data && data.length > 0) {
+            if(data && Array.isArray(data) && data.length > 0) {
                 reportsData = data;
                 updateMapMarkers();
                 updateOfficerMapMarkers();
@@ -322,52 +343,92 @@
                 renderUserReportsList();
             }
         } catch (error) {
-            console.error("Error fetching data from Google Sheets", error);
+            console.error("Error fetching data:", error);
         }
     }
 
-    // ================= NAVIGATION =================
+    function startAutoSync() {
+        fetchReportsFromSheets();
+        if(!syncInterval) {
+            syncInterval = setInterval(() => {
+                fetchReportsFromSheets();
+            }, 10000); // ดึงข้อมูลใหม่ทุกๆ 10 วินาที
+        }
+    }
+
+    // ================= NAVIGATION & TAB CONTROL =================
     function selectRole(role) {
         document.getElementById('page-role').classList.add('hide');
         if(role === 'user') {
             document.getElementById('page-user-app').classList.remove('hide'); document.getElementById('page-user-app').classList.add('flex');
-            initUserMaps(); startGpsTracking(); fetchReportsFromSheets();
+            initUserMaps(); startGpsTracking(); startAutoSync(); switchUserTab('home');
         } else {
             document.getElementById('page-officer').classList.remove('hide'); document.getElementById('page-officer').classList.add('flex');
-            initOfficerMap(); renderOfficerDashboard(); fetchReportsFromSheets();
+            initOfficerMap(); renderOfficerDashboard(); startAutoSync();
         }
     }
 
     function switchRole() {
+        if(syncInterval) clearInterval(syncInterval);
         document.getElementById('page-user-app').classList.add('hide'); document.getElementById('page-officer').classList.add('hide');
         document.getElementById('page-officer-detail').classList.add('hide'); document.getElementById('page-role').classList.remove('hide');
     }
 
     function switchUserTab(tabName) {
+        // Hide all tabs
         document.querySelectorAll('.user-tab').forEach(el => el.classList.add('hide'));
-        document.querySelectorAll('.user-nav-btn').forEach(el => { el.classList.remove('bottom-nav-active'); el.classList.add('bottom-nav-inactive'); });
+        
+        // Reset Nav styles
+        document.querySelectorAll('.user-nav-btn').forEach(el => {
+            el.classList.remove('bottom-nav-active');
+            el.classList.add('bottom-nav-inactive');
+        });
+
+        // Activate Selected Tab
         document.getElementById('tab-user-' + tabName).classList.remove('hide');
-        if(tabName === 'home') setTimeout(() => mapHome.invalidateSize(), 200);
-        if(tabName === 'report') setTimeout(() => mapReportMini.invalidateSize(), 200);
-        if(tabName === 'map') setTimeout(() => mapUserFull.invalidateSize(), 200);
+        const activeNavBtn = document.getElementById('nav-btn-' + tabName);
+        if(activeNavBtn) {
+            activeNavBtn.classList.remove('bottom-nav-inactive');
+            activeNavBtn.classList.add('bottom-nav-active');
+        }
+
+        // Handle Maps Invalidation
+        if(tabName === 'home' && mapHome) setTimeout(() => mapHome.invalidateSize(), 200);
+        if(tabName === 'report' && mapReportMini) setTimeout(() => mapReportMini.invalidateSize(), 200);
+        if(tabName === 'map' && mapUserFull) setTimeout(() => mapUserFull.invalidateSize(), 200);
         if(tabName === 'reports') renderUserReportsList();
     }
 
     // ================= MAPS =================
     function initUserMaps() {
         if(mapHome) return;
-        mapHome = L.map('map-home', {zoomControl: false, attributionControl: false}).setView([userLat, userLon], 15); L.tileLayer(satelliteUrl).addTo(mapHome);
-        mapUserFull = L.map('map-user-full', {zoomControl: true, attributionControl: false}).setView([userLat, userLon], 15); L.tileLayer(satelliteUrl).addTo(mapUserFull);
-        mapReportMini = L.map('map-report-mini', {zoomControl: false, attributionControl: false}).setView([selectedLat, selectedLon], 15); L.tileLayer(satelliteUrl).addTo(mapReportMini);
+
+        // Map Home
+        mapHome = L.map('map-home', {zoomControl: false, attributionControl: false}).setView([userLat, userLon], 15); 
+        L.tileLayer(satelliteUrl).addTo(mapHome);
+        homeMarkersGroup = L.layerGroup().addTo(mapHome);
+
+        // Map Full
+        mapUserFull = L.map('map-user-full', {zoomControl: true, attributionControl: false}).setView([userLat, userLon], 15); 
+        L.tileLayer(satelliteUrl).addTo(mapUserFull);
+        fullMapMarkersGroup = L.layerGroup().addTo(mapUserFull);
+
+        // Map Report Mini
+        mapReportMini = L.map('map-report-mini', {zoomControl: false, attributionControl: false}).setView([selectedLat, selectedLon], 15); 
+        L.tileLayer(satelliteUrl).addTo(mapReportMini);
         markerReportMini = L.marker([selectedLat, selectedLon], {icon: createIcon('red'), draggable: true}).addTo(mapReportMini);
+        
         markerReportMini.on('dragend', (e) => updateReportCoords(e.target.getLatLng().lat, e.target.getLatLng().lng));
         mapReportMini.on('click', (e) => { markerReportMini.setLatLng(e.latlng); updateReportCoords(e.latlng.lat, e.latlng.lng); });
+
         updateMapMarkers();
     }
 
     function initOfficerMap() {
         if(mapOfficer) return;
-        mapOfficer = L.map('map-officer', {zoomControl: false, attributionControl: false}).setView([userLat, userLon], 14); L.tileLayer(satelliteUrl).addTo(mapOfficer);
+        mapOfficer = L.map('map-officer', {zoomControl: false, attributionControl: false}).setView([userLat, userLon], 14); 
+        L.tileLayer(satelliteUrl).addTo(mapOfficer);
+        officerMarkersGroup = L.layerGroup().addTo(mapOfficer);
         updateOfficerMapMarkers();
     }
 
@@ -377,26 +438,47 @@
     }
 
     function updateMapMarkers() {
-        if(!mapHome) return;
+        if(!homeMarkersGroup || !fullMapMarkersGroup) return;
+        homeMarkersGroup.clearLayers();
+        fullMapMarkersGroup.clearLayers();
+
+        // ปักหมุดตำแหน่งปัจจุบันของผู้ใช้
+        if(userLat && userLon) {
+            userMarkerHome = L.marker([userLat, userLon], {icon: userLocationIcon}).addTo(homeMarkersGroup).bindPopup("ตำแหน่งของคุณ");
+            userMarkerFull = L.marker([userLat, userLon], {icon: userLocationIcon}).addTo(fullMapMarkersGroup).bindPopup("ตำแหน่งของคุณ");
+        }
+
+        // ปักหมุดรายการหลุม
         reportsData.forEach(item => {
-            L.marker([item.lat, item.lon], {icon: createIcon('red')}).addTo(mapHome).bindPopup(item.title);
-            L.marker([item.lat, item.lon], {icon: createIcon('red')}).addTo(mapUserFull).bindPopup(item.title);
+            const lat = parseFloat(item.lat);
+            const lon = parseFloat(item.lon);
+            if(!isNaN(lat) && !isNaN(lon)) {
+                L.marker([lat, lon], {icon: createIcon('red')}).addTo(homeMarkersGroup).bindPopup(`<b>${item.title}</b><br>${item.desc}`);
+                L.marker([lat, lon], {icon: createIcon('red')}).addTo(fullMapMarkersGroup).bindPopup(`<b>${item.title}</b><br>${item.desc}`);
+            }
         });
         renderRecentHomeList();
     }
 
     function updateOfficerMapMarkers() {
-        if(!mapOfficer) return;
+        if(!officerMarkersGroup) return;
+        officerMarkersGroup.clearLayers();
+
         reportsData.forEach(item => {
-            let color = item.status.includes('เสร็จ') ? 'green' : item.status.includes('ซ่อม') ? 'yellow' : 'red';
-            L.marker([item.lat, item.lon], {icon: createIcon(color)}).addTo(mapOfficer).bindPopup(item.title);
+            const lat = parseFloat(item.lat);
+            const lon = parseFloat(item.lon);
+            if(!isNaN(lat) && !isNaN(lon)) {
+                let color = item.status.includes('เสร็จ') ? 'green' : item.status.includes('ซ่อม') ? 'yellow' : 'red';
+                L.marker([lat, lon], {icon: createIcon(color)}).addTo(officerMarkersGroup).bindPopup(`<b>${item.title}</b><br>สถานะ: ${item.status}`);
+            }
         });
     }
 
     function openFullMapModal() {
         document.getElementById('modal-map-pick').classList.remove('hide');
         if(!mapModalPick) {
-            mapModalPick = L.map('map-modal-container', {zoomControl: true}).setView([selectedLat, selectedLon], 16); L.tileLayer(satelliteUrl).addTo(mapModalPick);
+            mapModalPick = L.map('map-modal-container', {zoomControl: true}).setView([selectedLat, selectedLon], 16); 
+            L.tileLayer(satelliteUrl).addTo(mapModalPick);
             markerModalPick = L.marker([selectedLat, selectedLon], {icon: createIcon('red'), draggable: true}).addTo(mapModalPick);
             markerModalPick.on('dragend', (e) => { const p = e.target.getLatLng(); markerReportMini.setLatLng(p); updateReportCoords(p.lat, p.lng); });
         } else {
@@ -405,21 +487,46 @@
     }
     function closeFullMapModal() { document.getElementById('modal-map-pick').classList.add('hide'); mapReportMini.setView([selectedLat, selectedLon]); }
 
-    // ================= GPS & ALERT =================
+    // ================= GPS REAL-TIME TRACKING =================
     function startGpsTracking() {
         if(navigator.geolocation) {
             navigator.geolocation.watchPosition((pos) => {
-                userLat = pos.coords.latitude; userLon = pos.coords.longitude;
-                document.getElementById('user-gps-text').innerHTML = `<i class="fa-solid fa-location-dot text-green-400 mr-1"></i> ${userLat.toFixed(4)}, ${userLon.toFixed(4)}`;
-                reportsData.forEach(item => { if(getDistance(userLat, userLon, item.lat, item.lon) < 0.05) triggerVibrationAlert(); });
-            }, () => { document.getElementById('user-gps-text').innerText = "ใช้พิกัดเริ่มต้น"; }, {enableHighAccuracy: true});
+                userLat = pos.coords.latitude; 
+                userLon = pos.coords.longitude;
+                
+                document.getElementById('user-gps-text').innerHTML = `<i class="fa-solid fa-location-dot text-emerald-400 mr-1"></i> ละติจูด: ${userLat.toFixed(4)}, ลองจิจูด: ${userLon.toFixed(4)}`;
+                
+                // อัปเดตตำแหน่งหมุดสีฟ้าบนแผนที่
+                if(userMarkerHome) userMarkerHome.setLatLng([userLat, userLon]);
+                if(userMarkerFull) userMarkerFull.setLatLng([userLat, userLon]);
+
+                // ตรวจสอบระยะทางอัตโนมัติ (ถ้าระยะห่างน้อยกว่า 50 เมตร ให้สั่น/เตือน)
+                reportsData.forEach(item => { 
+                    const itemLat = parseFloat(item.lat);
+                    const itemLon = parseFloat(item.lon);
+                    if(!isNaN(itemLat) && !isNaN(itemLon)) {
+                        if(getDistance(userLat, userLon, itemLat, itemLon) < 0.05) {
+                            triggerVibrationAlert(); 
+                        }
+                    }
+                });
+            }, (error) => { 
+                document.getElementById('user-gps-text').innerText = "ใช้พิกัดเริ่มต้น (กรุณาเปิด GPS)"; 
+            }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 });
         }
     }
+
     function getDistance(lat1, lon1, lat2, lon2) {
-        var p = 0.017453292519943295; var c = Math.cos; var a = 0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2; return 12742 * Math.asin(Math.sqrt(a));
+        var p = 0.017453292519943295; 
+        var c = Math.cos; 
+        var a = 0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2; 
+        return 12742 * Math.asin(Math.sqrt(a)); // คืนค่าเป็นกิโลเมตร
     }
-    function triggerVibrationAlert() { document.getElementById('vibration-alert-banner').classList.remove('hide'); if("vibrate" in navigator) navigator.vibrate([300, 100, 300]); }
-    function triggerTestVibration() { triggerVibrationAlert(); }
+
+    function triggerVibrationAlert() { 
+        document.getElementById('vibration-alert-banner').classList.remove('hide'); 
+        if("vibrate" in navigator) navigator.vibrate([300, 100, 300]); 
+    }
     function closeVibeAlert() { document.getElementById('vibration-alert-banner').classList.add('hide'); }
 
     // ================= UPLOAD & SUBMIT =================
@@ -436,61 +543,79 @@
         document.getElementById('imagePreview').classList.add('hidden'); document.getElementById('removeImgBtn').classList.add('hidden'); document.getElementById('uploadBox').classList.remove('hidden');
     }
 
-    function submitUserReport() {
+    async function submitUserReport() {
         const desc = document.getElementById('report-desc').value;
         const imgSrc = document.getElementById('imagePreview').src || "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=600";
         if(document.getElementById('imageInput').files.length === 0 && !document.getElementById('imagePreview').src) { alert("กรุณาถ่ายรูปหลุมก่อนครับ"); return; }
 
         const newReport = {
-            id: "KKU-" + Math.floor(100000 + Math.random() * 900000), title: desc ? desc.substring(0,15) : "พบหลุมบนถนน",
-            severity: "ระดับ 3", status: "หน่วยงานได้รับเรื่อง", location: "บริเวณมหาวิทยาลัยขอนแก่น",
-            lat: selectedLat, lon: selectedLon, desc: desc || "แจ้งปัญหาผ่านแอป", img: imgSrc, log: "อัปโหลดแล้ว"
+            id: "KKU-" + Math.floor(100000 + Math.random() * 900000), 
+            title: desc ? desc.substring(0,20) : "พบหลุมบนถนน",
+            severity: "ระดับ 3", 
+            status: "หน่วยงานได้รับเรื่อง", 
+            location: "บริเวณมหาวิทยาลัยขอนแก่น",
+            lat: selectedLat, 
+            lon: selectedLon, 
+            desc: desc || "แจ้งปัญหาผ่านแอป", 
+            img: imgSrc, 
+            log: "อัปโหลดข้อมูลแล้ว"
         };
 
-        // 1. นำข้อมูลขึ้นโชว์บนแอปทันทีแบบ Real-time
+        // 1. นำข้อมูลแสดงผลบนหน้าจอทันที
         reportsData.unshift(newReport);
-        updateMapMarkers(); updateOfficerMapMarkers(); removeImage();
+        updateMapMarkers(); 
+        updateOfficerMapMarkers(); 
+        removeImage();
         document.getElementById('report-desc').value = "";
         
-        // 2. ส่งข้อมูลบันทึกลง Google Sheets แบบเบื้องหลัง
+        // 2. ส่งข้อมูลบันทึกลง Google Sheets
         if(!GOOGLE_WEB_APP_URL.includes("ใส่_URL")) {
-            fetch(GOOGLE_WEB_APP_URL, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: "create", data: newReport })
-            }).catch(err => console.log("Save to sheet error", err));
+            try {
+                await fetch(GOOGLE_WEB_APP_URL, {
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "create", data: newReport })
+                });
+            } catch (err) {
+                console.log("บันทึกลง Sheet ไม่สำเร็จ:", err);
+            }
         }
 
-        alert("ส่งข้อมูลสำเร็จ! หมุดถูกเพิ่มบนแผนที่เรียบร้อยครับ");
+        alert("ส่งข้อมูลสำเร็จ! หมุดถูกเพิ่มลงระบบเรียบร้อยแล้ว");
         switchUserTab('reports');
     }
 
     // ================= RENDER LISTS & DASHBOARD =================
     function renderRecentHomeList() {
         document.getElementById('recent-reports-list').innerHTML = reportsData.slice(0, 3).map(r => `
-            <div class="bg-white p-3 rounded-xl border flex items-center justify-between">
+            <div class="bg-white p-3 rounded-xl border flex items-center justify-between shadow-sm">
                 <div class="flex items-center gap-3"><img src="${r.img}" class="w-10 h-10 object-cover rounded-lg">
-                <div><h4 class="text-xs font-bold">${r.title}</h4><p class="text-[10px] text-gray-400">${r.location}</p></div></div>
+                <div><h4 class="text-xs font-bold text-gray-800">${r.title}</h4><p class="text-[10px] text-gray-400">${r.location}</p></div></div>
                 <span class="text-[10px] bg-red-50 text-red-600 px-2 rounded-full font-bold">${r.severity}</span>
             </div>`).join('');
     }
+
     function renderUserReportsList() {
         document.getElementById('all-user-reports-list').innerHTML = reportsData.map(r => `
-            <div class="bg-white p-4 rounded-2xl border space-y-2">
+            <div class="bg-white p-4 rounded-2xl border space-y-2 shadow-sm">
                 <div class="flex justify-between items-start"><div><span class="text-[10px] font-bold text-[#165C7D]">${r.id}</span>
-                <h3 class="text-sm font-bold">${r.title}</h3></div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border">${r.status}</span></div>
-                <img src="${r.img}" class="w-full h-32 object-cover rounded-xl"><p class="text-xs text-gray-600">${r.desc}</p>
+                <h3 class="text-sm font-bold text-gray-800">${r.title}</h3></div>
+                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">${r.status}</span></div>
+                <img src="${r.img}" class="w-full h-36 object-cover rounded-xl border"><p class="text-xs text-gray-600 leading-relaxed">${r.desc}</p>
             </div>`).join('');
     }
+
     function renderOfficerDashboard() {
         document.getElementById('stat-new').innerText = reportsData.filter(r => r.status.includes('ใหม่') || r.status.includes('รับเรื่อง')).length;
         document.getElementById('stat-pending').innerText = reportsData.filter(r => r.status.includes('รอ') || r.status.includes('ข้อมูล')).length || 0;
         document.getElementById('stat-progress').innerText = reportsData.filter(r => r.status.includes('ซ่อม')).length;
         document.getElementById('stat-done').innerText = reportsData.filter(r => r.status.includes('เสร็จ')).length;
+        
         document.getElementById('officer-ticket-list').innerHTML = reportsData.map(r => `
-            <div onclick="openOfficerDetail('${r.id}')" class="bg-white p-4 rounded-2xl border flex justify-between items-center cursor-pointer">
-                <div><p class="text-[10px] font-bold text-gray-400">${r.id}</p><h4 class="text-xs font-bold">${r.title}</h4></div>
-                <span class="text-[10px] font-bold px-2 py-1 rounded bg-cyan-50 text-[#165C7D]">${r.status}</span>
+            <div onclick="openOfficerDetail('${r.id}')" class="bg-white p-4 rounded-2xl border flex justify-between items-center cursor-pointer shadow-sm hover:border-cyan-500 transition">
+                <div><p class="text-[10px] font-bold text-gray-400">${r.id}</p><h4 class="text-xs font-bold text-gray-800">${r.title}</h4></div>
+                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-cyan-50 text-[#165C7D] border border-cyan-100">${r.status}</span>
             </div>`).join('');
     }
 
@@ -505,17 +630,20 @@
     }
     function closeOfficerDetail() { document.getElementById('page-officer-detail').classList.add('hide'); }
 
-    function updateTicketStatus(newStatus) {
+    async function updateTicketStatus(newStatus) {
         if(!activeTicketId) return; const item = reportsData.find(r => r.id === activeTicketId);
         if(item) {
             item.status = newStatus; item.log = `เจ้าหน้าที่อัปเดตสถานะ: ${newStatus}`;
             
-            // ส่งข้อมูลอัปเดตสถานะไปที่ Google Sheets
-            if(!GOOGLE_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec")) {
-                fetch(GOOGLE_WEB_APP_URL, {
-                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: "update", id: item.id, status: newStatus, log: item.log })
-                }).catch(err => console.log("Update sheet error", err));
+            if(!GOOGLE_WEB_APP_URL.includes("ใส่_URL")) {
+                try {
+                    await fetch(https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec, {
+                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: "update", id: item.id, status: newStatus, log: item.log })
+                    });
+                } catch (err) {
+                    console.log("อัปเดต Sheet ไม่สำเร็จ:", err);
+                }
             }
 
             document.getElementById('detail-log').innerHTML = `<span class="font-bold">บันทึกล่าสุด:</span> ${item.log}`;
