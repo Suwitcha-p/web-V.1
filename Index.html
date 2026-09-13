@@ -161,7 +161,23 @@
                     </button>
                 </div>
                 <div id="map-report-mini" class="w-full h-40 rounded-xl border border-gray-200"></div>
-                <p id="report-coords" class="text-[11px] font-mono text-gray-500 text-right">พิกัด: -</p>
+
+                <!-- GPS ของผู้ใช้ -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 mt-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <p class="text-[11px] font-bold text-[#165C7D]">
+                                <i class="fa-solid fa-location-crosshairs mr-1"></i> GPS ของคุณ
+                            </p>
+                            <p id="report-user-gps" class="text-[11px] font-mono text-gray-600 mt-1">กำลังค้นหาตำแหน่ง...</p>
+                        </div>
+                        <button type="button" onclick="useMyGpsForReport()" class="shrink-0 bg-[#165C7D] text-white text-[10px] font-bold px-3 py-2 rounded-lg shadow-sm">
+                            <i class="fa-solid fa-location-dot mr-1"></i> ใช้ตำแหน่งฉัน
+                        </button>
+                    </div>
+                </div>
+
+                <p id="report-coords" class="text-[11px] font-mono text-gray-500 text-right">พิกัดจุดแจ้ง: -</p>
             </div>
 
             <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-2">
@@ -308,6 +324,7 @@
 
     let userLat = 16.4751, userLon = 102.8224;
     let selectedLat = userLat, selectedLon = userLon;
+    let userMarkerReport = null;
     let activeTicketId = null;
     let mapHome, mapUserFull, mapOfficer, mapReportMini, mapModalPick, markerReportMini, markerModalPick;
     let homeMarkersGroup, fullMapMarkersGroup, officerMarkersGroup;
@@ -413,11 +430,19 @@
         mapReportMini = L.map('map-report-mini', {zoomControl: false, attributionControl: false}).setView([selectedLat, selectedLon], 15); 
         L.tileLayer(satelliteUrl).addTo(mapReportMini);
         markerReportMini = L.marker([selectedLat, selectedLon], {icon: createIcon('red'), draggable: true}).addTo(mapReportMini);
+
+        // หมุดสีน้ำเงิน = ตำแหน่ง GPS ปัจจุบันของผู้ใช้
+        if(userLat && userLon) {
+            userMarkerReport = L.marker([userLat, userLon], {icon: userLocationIcon, zIndexOffset: 1000})
+                .addTo(mapReportMini)
+                .bindPopup("ตำแหน่ง GPS ของคุณ");
+        }
         
         markerReportMini.on('dragend', (e) => updateReportCoords(e.target.getLatLng().lat, e.target.getLatLng().lng));
         mapReportMini.on('click', (e) => { markerReportMini.setLatLng(e.latlng); updateReportCoords(e.latlng.lat, e.latlng.lng); });
 
         updateMapMarkers();
+        updateReportUserGps();
     }
 
     function initOfficerMap() {
@@ -430,7 +455,40 @@
 
     function updateReportCoords(lat, lng) {
         selectedLat = lat; selectedLon = lng;
-        document.getElementById('report-coords').innerText = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        document.getElementById('report-coords').innerText = `พิกัดจุดแจ้ง: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    }
+
+    // แสดง GPS ปัจจุบันของผู้ใช้ในหน้ารายงาน
+    function updateReportUserGps() {
+        const el = document.getElementById('report-user-gps');
+        if(!el) return;
+
+        if(userLat != null && userLon != null) {
+            el.innerHTML = `<span class="text-emerald-600"><i class="fa-solid fa-circle-check mr-1"></i>ละติจูด ${userLat.toFixed(6)} | ลองจิจูด ${userLon.toFixed(6)}</span>`;
+        } else {
+            el.innerHTML = `<span class="text-gray-500"><i class="fa-solid fa-spinner mr-1"></i>กำลังค้นหาตำแหน่ง...</span>`;
+        }
+    }
+
+    // ใช้ GPS ปัจจุบันเป็นจุดแจ้งปัญหา
+    function useMyGpsForReport() {
+        if(userLat == null || userLon == null) {
+            alert('ยังไม่พบตำแหน่ง GPS ของคุณ กรุณาอนุญาตการเข้าถึงตำแหน่งก่อน');
+            return;
+        }
+
+        updateReportCoords(userLat, userLon);
+
+        if(markerReportMini) markerReportMini.setLatLng([userLat, userLon]);
+        if(mapReportMini) {
+            mapReportMini.setView([userLat, userLon], 17);
+            setTimeout(() => mapReportMini.invalidateSize(), 150);
+        }
+
+        if(mapModalPick) {
+            mapModalPick.setView([userLat, userLon], 17);
+            if(markerModalPick) markerModalPick.setLatLng([userLat, userLon]);
+        }
     }
 
     function updateMapMarkers() {
@@ -513,6 +571,10 @@
                 // อัปเดตตำแหน่งหมุดสีฟ้าบนแผนที่
                 if(userMarkerHome) userMarkerHome.setLatLng([userLat, userLon]);
                 if(userMarkerFull) userMarkerFull.setLatLng([userLat, userLon]);
+                if(userMarkerReport) userMarkerReport.setLatLng([userLat, userLon]);
+
+                // อัปเดตตัวเลข GPS ในหน้ารายงาน
+                updateReportUserGps();
 
                 // ตรวจสอบระยะทางอัตโนมัติ (ถ้าระยะห่างน้อยกว่า 50 เมตร ให้สั่น/เตือน)
                 reportsData.forEach(item => { 
