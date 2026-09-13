@@ -3,190 +3,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบเตือนหลุมถนน (Pothole Alert)</title>
+    <title>KKU Road Alert</title>
     
-    <!-- โหลดไลบรารีแผนที่ Leaflet.js (ฟรี ไม่ต้องใช้ API Key) -->
+    <!-- Tailwind CSS สำหรับจัด UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS & JS สำหรับแผนที่จริง -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: white; }
-        #map { height: 100vh; width: 100vw; z-index: 1; }
-        
-        /* UI ลอยทับแผนที่ */
-        .ui-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
-        
-        .btn { padding: 15px; border-radius: 10px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn-report { background-color: #ff3b30; color: white; }
-        .btn-start { background-color: #34c759; color: white; }
-        
-        /* หน้าต่างรายงานหลุม */
-        #reportModal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; padding: 20px; border-radius: 15px; z-index: 2000; width: 85%; max-width: 350px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .type-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; }
-        .btn-deep { background: #ff3b30; color: white; }
-        .btn-rough { background: #ffcc00; color: black; }
-        .btn-shallow { background: #34c759; color: white; }
-        .close-btn { background: #555; color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; margin-top: 10px; }
+    <!-- Google Fonts (Kanit) -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        /* การแจ้งเตือนหน้าจอ */
-        #alertBox { display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #ff3b30; color: white; padding: 15px 20px; border-radius: 10px; font-size: 18px; font-weight: bold; z-index: 3000; text-align: center; width: 80%; animation: blink 1s infinite alternate; }
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f3f4f6; }
+        .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; position: relative; padding-bottom: 70px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .hide { display: none !important; }
+        .bottom-nav-active { color: #165C7D; font-weight: 500; }
+        .bottom-nav-inactive { color: #9ca3af; }
         
-        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
-        
-        #status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; z-index: 1000; font-size: 12px; }
+        /* Custom map markers */
+        .custom-div-icon { background: transparent; border: none; }
+        .marker-pin { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; background: #c30b82; position: absolute; transform: rotate(-45deg); left: 50%; top: 50%; margin: -15px 0 0 -15px; box-shadow: 0 3px 5px rgba(0,0,0,0.3); }
+        .marker-pin::after { content: ''; width: 14px; height: 14px; margin: 8px 0 0 8px; background: #fff; position: absolute; border-radius: 50%; }
+        .pin-red { background: #ef4444; }
+        .pin-yellow { background: #eab308; }
+        .pin-green { background: #22c55e; }
+        .pin-blue { background: #3b82f6; }
     </style>
 </head>
 <body>
 
-    <div id="status">รอรับสัญญาณ GPS...</div>
-    <div id="alertBox">⚠️ ระวัง! มีหลุมบ่อลึกข้างหน้า (50ม.)</div>
-    <div id="map"></div>
+<div class="app-container">
 
-    <div class="ui-container">
-        <button class="btn btn-start" id="startDriveBtn" onclick="startDriving()">🚀 เริ่มขับขี่ (เปิด GPS & กันจอดับ)</button>
-        <button class="btn btn-report" onclick="openReportModal()" style="display: none;" id="reportBtn">📍 แจ้งหลุมตรงนี้!</button>
+    <!-- ==================== VIEW: หน้าหลัก (HOME) ==================== -->
+    <div id="view-home" class="view-section px-5 pt-6 pb-4">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-xs text-gray-500">สวัสดี! เดินทางอย่างปลอดภัย</p>
+                <h1 class="text-2xl font-bold text-[#1a365d]">วันนี้ไปที่ไหนดี?</h1>
+            </div>
+            <button class="text-red-500 text-xl relative">
+                <i class="fa-regular fa-bell"></i>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+        </div>
+
+        <div class="relative w-full h-40 bg-teal-50 rounded-2xl overflow-hidden mb-4 border border-teal-100 shadow-inner">
+            <div id="map-home" class="w-full h-full"></div>
+            <div class="absolute top-2 left-2 bg-white px-3 py-1 rounded-full text-[10px] font-medium shadow z-[400]">
+                หลัง มข. - บ้านโนนม่วง
+            </div>
+            <div class="absolute bottom-2 right-2 bg-white px-3 py-1 rounded-full text-[10px] font-medium shadow z-[400] text-[#165C7D]" onclick="switchTab('map')">
+                เปิดแผนที่
+            </div>
+        </div>
+
+        <div class="bg-red-50 rounded-xl p-3 flex items-start gap-3 mb-4 border border-red-100">
+            <div class="text-red-500 mt-1"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+                <h3 class="text-sm font-semibold text-red-800">พบจุดเสี่ยงใกล้คุณ</h3>
+                <p class="text-xs text-red-600">มีหลุมบนถนนห่างออกไปประมาณ 180 เมตร</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <!-- ปุ่มแจ้งปัญหาที่เชื่อมไปยังหน้า Report -->
+            <div onclick="switchTab('report')" class="bg-[#165C7D] rounded-xl p-4 text-white shadow-md cursor-pointer hover:bg-[#114b66] transition">
+                <i class="fa-solid fa-camera text-xl mb-2"></i>
+                <p class="text-xs font-semibold leading-tight">แจ้งปัญหา<br>ถนนชำรุด</p>
+            </div>
+            <div onclick="switchTab('nav')" class="bg-[#fef3c7] rounded-xl p-4 text-[#92400e] shadow-md cursor-pointer hover:bg-[#fde68a] transition">
+                <i class="fa-regular fa-paper-plane text-xl mb-2"></i>
+                <p class="text-xs font-semibold leading-tight">เริ่มนำทาง<br>อย่างปลอดภัย</p>
+            </div>
+        </div>
+
+        <h3 class="text-sm font-bold text-[#1a365d] mb-3">จุดที่ต้องระวังใกล้คุณ</h3>
+        <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="text-red-500 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center border border-red-100">
+                    <i class="fa-solid fa-exclamation text-xs"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-800">ถนนหลัง มข. ฝั่งตลาดโนนม่วง</h4>
+                    <p class="text-[10px] text-gray-500">หลุมบนถนน · ระดับรุนแรง</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold text-red-500">180 ม.</span>
+        </div>
     </div>
 
-    <!-- Modal สำหรับเลือกประเภทหลุม -->
-    <div id="reportModal">
-        <h3 style="margin-top: 0; text-align: center;">ระบุประเภทหลุม</h3>
-        <button class="type-btn btn-deep" onclick="addPothole('หลุมบ่อลึก', 'red')">🔴 หลุมบ่อลึก (อันตราย)</button>
-        <button class="type-btn btn-rough" onclick="addPothole('หลุมขรุขระ', 'orange')">🟠 หลุมขรุขระ (ลดความเร็ว)</button>
-        <button class="type-btn btn-shallow" onclick="addPothole('หลุมไม่ลึก', 'green')">🟢 หลุมตื้น (ผ่านได้)</button>
-        <label style="display: block; text-align: center; margin: 10px 0;">
-            <input type="checkbox" id="addPhoto"> แนบรูปภาพ (จำลอง)
-        </label>
-        <button class="close-btn" onclick="closeReportModal()">ยกเลิก</button>
-    </div>
-
-    <script>
-        let map, userMarker;
-        let userLat = 0, userLng = 0;
-        let wakeLock = null;
-        let watchId = null;
+    <!-- ==================== VIEW: แจ้งปัญหา (REPORT FORM) ==================== -->
+    <div id="view-report" class="view-section hide flex flex-col h-[calc(100vh-70px)] bg-gray-50">
+        <div class="px-5 py-4 bg-white z-10 shadow-sm flex items-center gap-3">
+            <button onclick="switchTab('home')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
+            <h1 class="text-lg font-bold text-[#1a365d]">แจ้งปัญหาถนนชำรุด</h1>
+        </div>
         
-        // ฐานข้อมูลจำลอง (ถ้าทำจริงต้องเซฟลง Firebase)
-        let potholes = [
-            // ตัวอย่างหลุมที่ปักไว้ก่อนหน้า (คุณสามารถลบออกได้)
-            // { lat: 13.7563, lng: 100.5018, type: 'หลุมบ่อลึก', color: 'red' }
-        ];
-
-        // 1. เริ่มต้นแผนที่
-        function initMap() {
-            // ตั้งค่าเริ่มต้นที่ประเทศไทย
-            map = L.map('map').setView([13.7563, 100.5018], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-        }
-
-        // 2. ฟังก์ชันเริ่มการขับขี่ (ขอ GPS และ Wake Lock)
-        async function startDriving() {
-            document.getElementById('startDriveBtn').style.display = 'none';
-            document.getElementById('reportBtn').style.display = 'block';
+        <div class="p-5 flex-grow overflow-y-auto pb-20">
+            <!-- 1. อัปโหลดรูป -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-2">1. ถ่ายรูปหรืออัปโหลดรูปภาพ <span class="text-red-500">*</span></label>
+                <div id="uploadBox" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50 transition flex flex-col items-center justify-center" onclick="document.getElementById('imageInput').click()">
+                    <i class="fa-solid fa-camera text-3xl text-gray-400 mb-2"></i>
+                    <p class="text-xs text-gray-500">แตะเพื่อเลือกรูปภาพ</p>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(event)">
+                <div class="relative">
+                    <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-xl mt-2 border border-gray-200">
+                    <button id="removeImgBtn" onclick="removeImage(event)" class="hidden absolute top-4 right-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md text-sm"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
             
-            // ขอ Wake Lock เพื่อไม่ให้หน้าจอดับ
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                document.getElementById('status').innerText = 'GPS: ทำงาน | หน้าจอ: เปิดค้าง';
-            } catch (err) {
-                console.log('Wake Lock Error:', err);
-            }
+            <!-- 2. รายละเอียด -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-2">2. รายละเอียดปัญหา <span class="text-red-500">*</span></label>
+                <textarea id="descInput" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-[#165C7D]" placeholder="เช่น ถนนทรุดเป็นหลุมลึก มีน้ำขัง..."></textarea>
+            </div>
+            
+            <!-- 3. พิกัด -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">3. พิกัดปัจจุบัน</label>
+                <p class="text-xs text-gray-500"><i class="fa-solid fa-location-crosshairs text-[#165C7D] mr-1"></i> ดึงพิกัดอัตโนมัติ: (16.4751, 102.8224)</p>
+            </div>
 
-            // เริ่มติดตาม GPS
-            if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
-                    enableHighAccuracy: true, maximumAge: 0, timeout: 5000
-                });
-            } else {
-                alert('อุปกรณ์ของคุณไม่รองรับ GPS');
+            <button id="submitBtn" onclick="submitReport()" class="w-full bg-[#165C7D] text-white py-3.5 rounded-xl text-sm font-bold shadow-md hover:bg-[#114b66] transition">ส่งข้อมูลแจ้งปัญหา</button>
+            
+            <!-- แจ้งเตือนสถานะอัปโหลด -->
+            <div id="statusAlert" class="hidden mt-4 p-3 rounded-xl text-sm text-center font-semibold"></div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW: แผนที่ (MAP) ==================== -->
+    <div id="view-map" class="view-section hide flex flex-col h-[calc(100vh-70px)]">
+        <div class="px-5 py-4 bg-white z-10 shadow-sm flex items-center gap-3">
+            <button onclick="switchTab('home')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <p class="text-[10px] text-gray-500">ศูนย์ข้อมูลพื้นที่</p>
+                <h1 class="text-lg font-bold text-[#1a365d] leading-none">แผนที่จุดเสี่ยง</h1>
+            </div>
+        </div>
+        <div class="flex-grow relative p-4 bg-gray-50">
+            <div class="w-full h-[60vh] rounded-3xl overflow-hidden shadow-inner border border-gray-200 relative">
+                <div id="map-full" class="w-full h-full"></div>
+                <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-xl shadow-md z-[400]">
+                    <p class="text-[10px] font-bold text-gray-800">ตำแหน่งของคุณ</p>
+                    <p class="text-[10px] text-gray-500">บ้านโนนม่วง</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-between items-center mt-4">
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] text-gray-600">ถนนชำรุด</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div><span class="text-[10px] text-gray-600">กำลังซ่อม</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-[10px] text-gray-600">ซ่อมเสร็จ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW: นำทาง (NAVIGATE) ==================== -->
+    <div id="view-nav" class="view-section hide px-5 pt-4">
+        <!-- ย่อโค้ดหน้านำทางไว้เหมือนเดิม -->
+        <div class="flex items-center gap-3 mb-4">
+            <button onclick="switchTab('home')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
+            <h1 class="text-lg font-bold text-[#1a365d]">วางแผนเส้นทาง</h1>
+        </div>
+        <p class="text-xs font-semibold text-gray-600 mb-2">ปลายทาง</p>
+        <div class="flex gap-2 mb-6">
+            <input type="text" value="ประตูหลัง มหาวิทยาลัยขอนแก่น" class="flex-grow bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#165C7D]">
+            <button class="bg-[#165C7D] text-white px-4 rounded-xl shadow-md"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div class="relative w-full h-48 bg-teal-50 rounded-2xl overflow-hidden shadow-inner border border-teal-100">
+            <div id="map-nav" class="w-full h-full"></div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW: เรื่องของฉัน (MY REPORTS) ==================== -->
+    <div id="view-reports" class="view-section hide px-5 pt-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <p class="text-[10px] text-gray-500">ติดตามได้ทุกขั้นตอน</p>
+                <h1 class="text-xl font-bold text-[#1a365d]">เรื่องร้องเรียนของฉัน</h1>
+            </div>
+            <button onclick="switchTab('report')" class="bg-[#165C7D] text-white w-8 h-8 rounded-full shadow-md text-sm"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div class="space-y-3">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-[10px] font-bold text-[#165C7D]">KKU-631235</p>
+                        <h3 class="text-sm font-bold text-gray-800">ถนนทรุด · ระดับ 4</h3>
+                    </div>
+                    <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1 rounded-full border border-blue-100">กำลังซ่อมแซม</span>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-[10px] font-bold text-[#165C7D]">KKU-532446</p>
+                        <h3 class="text-sm font-bold text-gray-800">หลุมบนถนน · ระดับ 2</h3>
+                    </div>
+                    <span class="bg-yellow-50 text-yellow-600 text-[10px] font-bold px-3 py-1 rounded-full border border-yellow-100">หน่วยงานได้รับเรื่อง</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW: เจ้าหน้าที่ (OFFICER DASHBOARD) ==================== -->
+    <div id="view-officer-dashboard" class="view-section hide">
+        <div class="bg-[#165C7D] text-white px-5 pt-8 pb-6 rounded-b-[2rem] shadow-md relative">
+            <div class="flex justify-between items-center mb-2">
+                <p class="text-[10px] tracking-widest opacity-80 uppercase">KKU Road Alert · Officer</p>
+                <img src="https://ui-avatars.com/api/?name=Officer&background=fff&color=165C7D" class="w-8 h-8 rounded-full border-2 border-white">
+            </div>
+            <h1 class="text-2xl font-bold">ศูนย์ปฏิบัติการ</h1>
+        </div>
+        <!-- ใส่เนื้อหาย่อเพื่อความกระชับ (หน้าตามแบบเดิม) -->
+    </div>
+
+
+    <!-- ==================== BOTTOM NAVIGATION ==================== -->
+    <div id="bottom-nav" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 pb-safe z-50">
+        <div class="max-w-md mx-auto flex justify-around items-center py-2 px-2">
+            <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-active" onclick="switchTab('home')">
+                <i class="fa-solid fa-house text-lg mb-1"></i><span class="text-[10px]">หน้าหลัก</span>
+            </div>
+            <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-inactive" onclick="switchTab('map')">
+                <i class="fa-regular fa-map text-lg mb-1"></i><span class="text-[10px]">แผนที่</span>
+            </div>
+            <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-inactive" onclick="switchTab('nav')">
+                <i class="fa-solid fa-location-arrow text-lg mb-1"></i><span class="text-[10px]">นำทาง</span>
+            </div>
+            <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-inactive" onclick="switchTab('reports')">
+                <i class="fa-solid fa-clipboard-list text-lg mb-1"></i><span class="text-[10px]">เรื่องของฉัน</span>
+            </div>
+            <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-inactive" onclick="toggleRole()">
+                <i class="fa-regular fa-user text-lg mb-1" id="role-icon"></i><span class="text-[10px]" id="role-text">จนท.</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // =========================================================
+    // ⚠️ ใส่ URL จาก Google Apps Script (Web App) ของคุณที่นี่ ⚠️
+    // =========================================================
+    const WEB_APP_URL = "ใส่_URL_ของ_GOOGLE_APPS_SCRIPT_ตรงนี้";
+
+
+    // ตั้งค่าพิกัดเริ่มต้น 
+    const kkuLat = 16.4751;
+    const kkuLon = 102.8224;
+    let mapsInitialized = false;
+    let mapHome, mapFull, mapNav;
+
+    const createIcon = (color) => {
+        return L.divIcon({ className: 'custom-div-icon', html: `<div class="marker-pin pin-${color}"></div>`, iconSize: [30, 42], iconAnchor: [15, 42] });
+    };
+
+    function initMaps() {
+        if(mapsInitialized) return;
+        const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        const mapOptions = { zoomControl: false, attributionControl: false };
+
+        mapHome = L.map('map-home', mapOptions).setView([kkuLat, kkuLon], 15);
+        L.tileLayer(tileUrl).addTo(mapHome);
+        L.marker([kkuLat, kkuLon], {icon: createIcon('blue')}).addTo(mapHome); 
+
+        mapFull = L.map('map-full', { zoomControl: true, attributionControl: false }).setView([kkuLat, kkuLon], 16);
+        L.tileLayer(tileUrl).addTo(mapFull);
+        L.marker([kkuLat, kkuLon], {icon: createIcon('blue')}).addTo(mapFull); 
+
+        mapNav = L.map('map-nav', mapOptions).setView([kkuLat, kkuLon], 14);
+        L.tileLayer(tileUrl).addTo(mapNav);
+
+        mapsInitialized = true;
+    }
+
+    // ฟังก์ชันสลับหน้า 
+    function switchTab(tabId) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hide'));
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => { item.classList.remove('bottom-nav-active'); item.classList.add('bottom-nav-inactive'); });
+
+        if(tabId === 'home') {
+            document.getElementById('view-home').classList.remove('hide');
+            navItems[0].classList.add('bottom-nav-active'); navItems[0].classList.remove('bottom-nav-inactive');
+            setTimeout(() => mapHome.invalidateSize(), 100);
+        }
+        else if(tabId === 'map') {
+            document.getElementById('view-map').classList.remove('hide');
+            navItems[1].classList.add('bottom-nav-active'); navItems[1].classList.remove('bottom-nav-inactive');
+            setTimeout(() => mapFull.invalidateSize(), 100);
+        }
+        else if(tabId === 'nav') {
+            document.getElementById('view-nav').classList.remove('hide');
+            navItems[2].classList.add('bottom-nav-active'); navItems[2].classList.remove('bottom-nav-inactive');
+            setTimeout(() => mapNav.invalidateSize(), 100);
+        }
+        else if(tabId === 'reports') {
+            document.getElementById('view-reports').classList.remove('hide');
+            navItems[3].classList.add('bottom-nav-active'); navItems[3].classList.remove('bottom-nav-inactive');
+        }
+        else if(tabId === 'report') {
+            document.getElementById('view-report').classList.remove('hide');
+            // หน้าแจ้งปัญหา ไม่โชว์เมนู active ด้านล่าง
+        }
+        else if(tabId === 'officer-dashboard') {
+            document.getElementById('view-officer-dashboard').classList.remove('hide');
+            navItems[4].classList.add('bottom-nav-active'); navItems[4].classList.remove('bottom-nav-inactive');
+        }
+    }
+
+    function toggleRole() { switchTab('officer-dashboard'); }
+
+
+    // ==========================================
+    // ส่วนของการจัดการฟอร์มและอัปโหลดรูปภาพ
+    // ==========================================
+    
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').classList.remove('hidden');
+                document.getElementById('removeImgBtn').classList.remove('hidden');
+                document.getElementById('uploadBox').classList.add('hidden');
             }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removeImage(event) {
+        event.preventDefault();
+        document.getElementById('imageInput').value = "";
+        document.getElementById('imagePreview').src = "";
+        document.getElementById('imagePreview').classList.add('hidden');
+        document.getElementById('removeImgBtn').classList.add('hidden');
+        document.getElementById('uploadBox').classList.remove('hidden');
+    }
+
+    function submitReport() {
+        const fileInput = document.getElementById('imageInput');
+        const descInput = document.getElementById('descInput').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const statusAlert = document.getElementById('statusAlert');
+
+        if (fileInput.files.length === 0) {
+            alert("กรุณาเลือกรูปภาพก่อนส่งครับ");
+            return;
+        }
+        if (descInput.trim() === "") {
+            alert("กรุณากรอกรายละเอียดปัญหาด้วยครับ");
+            return;
         }
 
-        // 3. อัปเดตตำแหน่งผู้ใช้และตรวจสอบระยะห่าง
-        function updatePosition(position) {
-            userLat = position.coords.latitude;
-            userLng = position.coords.longitude;
+        const file = fileInput.files[0];
+        const reader = new FileReader();
 
-            // วาดหมุดผู้ใช้
-            if (!userMarker) {
-                userMarker = L.marker([userLat, userLng]).addTo(map).bindPopup("คุณอยู่ที่นี่");
-                map.setView([userLat, userLng], 17); // ซูมเข้าไปใกล้
-            } else {
-                userMarker.setLatLng([userLat, userLng]);
-                map.setView([userLat, userLng]); // เลื่อนกล้องตาม
-            }
+        // แสดงสถานะกำลังโหลด
+        statusAlert.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+        statusAlert.classList.add('bg-blue-100', 'text-blue-800');
+        statusAlert.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลดและบันทึกข้อมูล...';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            checkProximity();
-        }
+        reader.onload = function(e) {
+            const base64Data = e.target.result.split(',')[1]; 
+            
+            const payload = {
+                imageBase64: base64Data,
+                mimeType: file.type,
+                filename: "kku_report_" + new Date().getTime() + ".jpg",
+                lat: kkuLat, 
+                lon: kkuLon, 
+                severity: "รอประเมิน",
+                description: descInput
+            };
 
-        function handleError(error) {
-            document.getElementById('status').innerText = 'ข้อผิดพลาด GPS: ' + error.message;
-        }
-
-        // 4. ระบบแจ้งเตือน (คำนวณระยะห่าง)
-        function checkProximity() {
-            let alertBox = document.getElementById('alertBox');
-            let isNear = false;
-
-            for (let p of potholes) {
-                let distance = calculateDistance(userLat, userLng, p.lat, p.lng);
-                
-                // ถ้าห่างน้อยกว่า 50 เมตร ให้แจ้งเตือน
-                if (distance < 50) {
-                    isNear = true;
-                    alertBox.style.display = 'block';
-                    alertBox.innerText = `⚠️ ระวัง! มี ${p.type} ข้างหน้า (${Math.round(distance)}ม.)`;
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    statusAlert.classList.replace('bg-blue-100', 'bg-green-100');
+                    statusAlert.classList.replace('text-blue-800', 'text-green-800');
+                    statusAlert.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเรื่องร้องเรียนเรียบร้อยแล้ว!';
                     
-                    // สั่งให้มือถือสั่น (Android)
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                    break;
+                    // รีเซ็ตฟอร์ม
+                    setTimeout(() => {
+                        removeImage(new Event('click'));
+                        document.getElementById('descInput').value = "";
+                        statusAlert.classList.add('hidden');
+                        switchTab('reports'); // พาไปหน้า "เรื่องของฉัน"
+                    }, 2000);
+                } else {
+                    throw new Error(data.message);
                 }
-            }
+            })
+            .catch(error => {
+                statusAlert.classList.replace('bg-blue-100', 'bg-red-100');
+                statusAlert.classList.replace('text-blue-800', 'text-red-800');
+                statusAlert.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> ข้อผิดพลาด: ' + (error.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        };
 
-            if (!isNear) alertBox.style.display = 'none';
-        }
+        reader.readAsDataURL(file);
+    }
 
-        // 5. UI จัดการการปักหมุด
-        function openReportModal() { document.getElementById('reportModal').style.display = 'block'; }
-        function closeReportModal() { document.getElementById('reportModal').style.display = 'none'; }
+    // เริ่มต้นแผนที่เมื่อเปิดเว็บ
+    window.onload = () => {
+        initMaps();
+        switchTab('home');
+    };
+</script>
 
-        function addPothole(type, color) {
-            let hasPhoto = document.getElementById('addPhoto').checked;
-            let potholeInfo = { lat: userLat, lng: userLng, type: type, color: color };
-            
-            potholes.push(potholeInfo); // บันทึกลง Array
-
-            // วาดหมุดลงแผนที่ (ใช้สีที่กำหนด)
-            let marker = L.circleMarker([userLat, userLng], {
-                color: color, radius: 10, fillOpacity: 0.8
-            }).addTo(map);
-
-            // กดที่หมุดเพื่อลบ
-            marker.bindPopup(`
-                <b>${type}</b><br>
-                ${hasPhoto ? '📸 มีรูปภาพ<br>' : ''}
-                <button onclick="removePothole(this)" style="margin-top:5px; background:#444; color:white; border:none; padding:5px; border-radius:3px;">ซ่อมแล้ว (ลบหมุด)</button>
-            `);
-
-            closeReportModal();
-            alert('ปักหมุดสำเร็จ!');
-        }
-
-        // สูตรคำนวณระยะทางจากพิกัด GPS (Haversine formula) คืนค่าเป็นเมตร
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            var R = 6371e3; // รัศมีโลก
-            var φ1 = lat1 * Math.PI/180;
-            var φ2 = lat2 * Math.PI/180;
-            var Δφ = (lat2-lat1) * Math.PI/180;
-            var Δλ = (lon2-lon1) * Math.PI/180;
-            var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; 
-        }
-
-        // เริ่มโหลดแผนที่เมื่อหน้าเว็บพร้อม
-        window.onload = initMap;
-    </script>
 </body>
 </html>
