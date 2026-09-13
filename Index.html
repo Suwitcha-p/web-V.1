@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบเตือนหลุมถนน (Pothole Alert)</title>
+    
+    <!-- โหลดไลบรารีแผนที่ Leaflet.js (ฟรี ไม่ต้องใช้ API Key) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: white; }
+        #map { height: 100vh; width: 100vw; z-index: 1; }
+        
+        /* UI ลอยทับแผนที่ */
+        .ui-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .btn { padding: 15px; border-radius: 10px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-report { background-color: #ff3b30; color: white; }
+        .btn-start { background-color: #34c759; color: white; }
+        
+        /* หน้าต่างรายงานหลุม */
+        #reportModal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; padding: 20px; border-radius: 15px; z-index: 2000; width: 85%; max-width: 350px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .type-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; }
+        .btn-deep { background: #ff3b30; color: white; }
+        .btn-rough { background: #ffcc00; color: black; }
+        .btn-shallow { background: #34c759; color: white; }
+        .close-btn { background: #555; color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; margin-top: 10px; }
+
+        /* การแจ้งเตือนหน้าจอ */
+        #alertBox { display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #ff3b30; color: white; padding: 15px 20px; border-radius: 10px; font-size: 18px; font-weight: bold; z-index: 3000; text-align: center; width: 80%; animation: blink 1s infinite alternate; }
+        
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
+        
+        #status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; z-index: 1000; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="status">รอรับสัญญาณ GPS...</div>
+    <div id="alertBox">⚠️ ระวัง! มีหลุมบ่อลึกข้างหน้า (50ม.)</div>
+    <div id="map"></div>
+
+    <div class="ui-container">
+        <button class="btn btn-start" id="startDriveBtn" onclick="startDriving()">🚀 เริ่มขับขี่ (เปิด GPS & กันจอดับ)</button>
+        <button class="btn btn-report" onclick="openReportModal()" style="display: none;" id="reportBtn">📍 แจ้งหลุมตรงนี้!</button>
+    </div>
+
+    <!-- Modal สำหรับเลือกประเภทหลุม -->
+    <div id="reportModal">
+        <h3 style="margin-top: 0; text-align: center;">ระบุประเภทหลุม</h3>
+        <button class="type-btn btn-deep" onclick="addPothole('หลุมบ่อลึก', 'red')">🔴 หลุมบ่อลึก (อันตราย)</button>
+        <button class="type-btn btn-rough" onclick="addPothole('หลุมขรุขระ', 'orange')">🟠 หลุมขรุขระ (ลดความเร็ว)</button>
+        <button class="type-btn btn-shallow" onclick="addPothole('หลุมไม่ลึก', 'green')">🟢 หลุมตื้น (ผ่านได้)</button>
+        <label style="display: block; text-align: center; margin: 10px 0;">
+            <input type="checkbox" id="addPhoto"> แนบรูปภาพ (จำลอง)
+        </label>
+        <button class="close-btn" onclick="closeReportModal()">ยกเลิก</button>
+    </div>
+
+    <script>
+        let map, userMarker;
+        let userLat = 0, userLng = 0;
+        let wakeLock = null;
+        let watchId = null;
+        
+        // ฐานข้อมูลจำลอง (ถ้าทำจริงต้องเซฟลง Firebase)
+        let potholes = [
+            // ตัวอย่างหลุมที่ปักไว้ก่อนหน้า (คุณสามารถลบออกได้)
+            // { lat: 13.7563, lng: 100.5018, type: 'หลุมบ่อลึก', color: 'red' }
+        ];
+
+        // 1. เริ่มต้นแผนที่
+        function initMap() {
+            // ตั้งค่าเริ่มต้นที่ประเทศไทย
+            map = L.map('map').setView([13.7563, 100.5018], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        // 2. ฟังก์ชันเริ่มการขับขี่ (ขอ GPS และ Wake Lock)
+        async function startDriving() {
+            document.getElementById('startDriveBtn').style.display = 'none';
+            document.getElementById('reportBtn').style.display = 'block';
+            
+            // ขอ Wake Lock เพื่อไม่ให้หน้าจอดับ
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                document.getElementById('status').innerText = 'GPS: ทำงาน | หน้าจอ: เปิดค้าง';
+            } catch (err) {
+                console.log('Wake Lock Error:', err);
+            }
+
+            // เริ่มติดตาม GPS
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
+                    enableHighAccuracy: true, maximumAge: 0, timeout: 5000
+                });
+            } else {
+                alert('อุปกรณ์ของคุณไม่รองรับ GPS');
+            }
+        }
+
+        // 3. อัปเดตตำแหน่งผู้ใช้และตรวจสอบระยะห่าง
+        function updatePosition(position) {
+            userLat = position.coords.latitude;
+            userLng = position.coords.longitude;
+
+            // วาดหมุดผู้ใช้
+            if (!userMarker) {
+                userMarker = L.marker([userLat, userLng]).addTo(map).bindPopup("คุณอยู่ที่นี่");
+                map.setView([userLat, userLng], 17); // ซูมเข้าไปใกล้
+            } else {
+                userMarker.setLatLng([userLat, userLng]);
+                map.setView([userLat, userLng]); // เลื่อนกล้องตาม
+            }
+
+            checkProximity();
+        }
+
+        function handleError(error) {
+            document.getElementById('status').innerText = 'ข้อผิดพลาด GPS: ' + error.message;
+        }
+
+        // 4. ระบบแจ้งเตือน (คำนวณระยะห่าง)
+        function checkProximity() {
+            let alertBox = document.getElementById('alertBox');
+            let isNear = false;
+
+            for (let p of potholes) {
+                let distance = calculateDistance(userLat, userLng, p.lat, p.lng);
+                
+                // ถ้าห่างน้อยกว่า 50 เมตร ให้แจ้งเตือน
+                if (distance < 50) {
+                    isNear = true;
+                    alertBox.style.display = 'block';
+                    alertBox.innerText = `⚠️ ระวัง! มี ${p.type} ข้างหน้า (${Math.round(distance)}ม.)`;
+                    
+                    // สั่งให้มือถือสั่น (Android)
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                    break;
+                }
+            }
+
+            if (!isNear) alertBox.style.display = 'none';
+        }
+
+        // 5. UI จัดการการปักหมุด
+        function openReportModal() { document.getElementById('reportModal').style.display = 'block'; }
+        function closeReportModal() { document.getElementById('reportModal').style.display = 'none'; }
+
+        function addPothole(type, color) {
+            let hasPhoto = document.getElementById('addPhoto').checked;
+            let potholeInfo = { lat: userLat, lng: userLng, type: type, color: color };
+            
+            potholes.push(potholeInfo); // บันทึกลง Array
+
+            // วาดหมุดลงแผนที่ (ใช้สีที่กำหนด)
+            let marker = L.circleMarker([userLat, userLng], {
+                color: color, radius: 10, fillOpacity: 0.8
+            }).addTo(map);
+
+            // กดที่หมุดเพื่อลบ
+            marker.bindPopup(`
+                <b>${type}</b><br>
+                ${hasPhoto ? '📸 มีรูปภาพ<br>' : ''}
+                <button onclick="removePothole(this)" style="margin-top:5px; background:#444; color:white; border:none; padding:5px; border-radius:3px;">ซ่อมแล้ว (ลบหมุด)</button>
+            `);
+
+            closeReportModal();
+            alert('ปักหมุดสำเร็จ!');
+        }
+
+        // สูตรคำนวณระยะทางจากพิกัด GPS (Haversine formula) คืนค่าเป็นเมตร
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            var R = 6371e3; // รัศมีโลก
+            var φ1 = lat1 * Math.PI/180;
+            var φ2 = lat2 * Math.PI/180;
+            var Δφ = (lat2-lat1) * Math.PI/180;
+            var Δλ = (lon2-lon1) * Math.PI/180;
+            var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; 
+        }
+
+        // เริ่มโหลดแผนที่เมื่อหน้าเว็บพร้อม
+        window.onload = initMap;
+    </script>
+</body>
+</html>
