@@ -304,14 +304,7 @@
 
 
     // DATA STORES
-    let reportsData = [
-        {
-            id: "KKU-631235", title: "ถนนทรุด", severity: "ระดับ 4", status: "กำลังซ่อมแซม",
-            location: "ซอยหลังมข.", lat: 16.4760, lon: 102.8230,
-            desc: "ถนนทรุดรุนแรง", img: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600",
-            log: "กำลังเข้าซ่อมแซม"
-        }
-    ];
+    let reportsData = [];
 
     let userLat = 16.4751, userLon = 102.8224;
     let selectedLat = userLat, selectedLon = userLon;
@@ -595,7 +588,7 @@
                 await fetch(GOOGLE_WEB_APP_URL, {
                     method: 'POST', 
                     mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: "create", data: newReport })
                 });
             } catch (err) {
@@ -659,7 +652,7 @@
             if(!GOOGLE_WEB_APP_URL.includes("ใส่_URL")) {
                 try {
                     await fetch(GOOGLE_WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: "update", id: item.id, status: newStatus, log: item.log })
                     });
                 } catch (err) {
