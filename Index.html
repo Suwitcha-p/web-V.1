@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KKU Road Alert</title>
     
-    <!-- Tailwind CSS สำหรับจัด UI -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- FontAwesome สำหรับไอคอน -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet CSS & JS สำหรับแผนที่จริง -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Google Fonts (Kanit) -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -71,7 +71,6 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3 mb-6">
-            <!-- ปุ่มแจ้งปัญหาที่เชื่อมไปยังหน้า Report -->
             <div onclick="switchTab('report')" class="bg-[#165C7D] rounded-xl p-4 text-white shadow-md cursor-pointer hover:bg-[#114b66] transition">
                 <i class="fa-solid fa-camera text-xl mb-2"></i>
                 <p class="text-xs font-semibold leading-tight">แจ้งปัญหา<br>ถนนชำรุด</p>
@@ -105,7 +104,6 @@
         </div>
         
         <div class="p-5 flex-grow overflow-y-auto pb-20">
-            <!-- 1. อัปโหลดรูป -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
                 <label class="block text-sm font-bold text-gray-700 mb-2">1. ถ่ายรูปหรืออัปโหลดรูปภาพ <span class="text-red-500">*</span></label>
                 <div id="uploadBox" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50 transition flex flex-col items-center justify-center" onclick="document.getElementById('imageInput').click()">
@@ -119,13 +117,11 @@
                 </div>
             </div>
             
-            <!-- 2. รายละเอียด -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
                 <label class="block text-sm font-bold text-gray-700 mb-2">2. รายละเอียดปัญหา <span class="text-red-500">*</span></label>
                 <textarea id="descInput" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-[#165C7D]" placeholder="เช่น ถนนทรุดเป็นหลุมลึก มีน้ำขัง..."></textarea>
             </div>
             
-            <!-- 3. พิกัด -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
                 <label class="block text-sm font-bold text-gray-700 mb-2">3. พิกัดปัจจุบัน</label>
                 <p class="text-xs text-gray-500"><i class="fa-solid fa-location-crosshairs text-[#165C7D] mr-1"></i> ดึงพิกัดอัตโนมัติ: (16.4751, 102.8224)</p>
@@ -133,7 +129,6 @@
 
             <button id="submitBtn" onclick="submitReport()" class="w-full bg-[#165C7D] text-white py-3.5 rounded-xl text-sm font-bold shadow-md hover:bg-[#114b66] transition">ส่งข้อมูลแจ้งปัญหา</button>
             
-            <!-- แจ้งเตือนสถานะอัปโหลด -->
             <div id="statusAlert" class="hidden mt-4 p-3 rounded-xl text-sm text-center font-semibold"></div>
         </div>
     </div>
@@ -171,7 +166,6 @@
 
     <!-- ==================== VIEW: นำทาง (NAVIGATE) ==================== -->
     <div id="view-nav" class="view-section hide px-5 pt-4">
-        <!-- ย่อโค้ดหน้านำทางไว้เหมือนเดิม -->
         <div class="flex items-center gap-3 mb-4">
             <button onclick="switchTab('home')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
             <h1 class="text-lg font-bold text-[#1a365d]">วางแผนเส้นทาง</h1>
@@ -217,19 +211,6 @@
         </div>
     </div>
 
-    <!-- ==================== VIEW: เจ้าหน้าที่ (OFFICER DASHBOARD) ==================== -->
-    <div id="view-officer-dashboard" class="view-section hide">
-        <div class="bg-[#165C7D] text-white px-5 pt-8 pb-6 rounded-b-[2rem] shadow-md relative">
-            <div class="flex justify-between items-center mb-2">
-                <p class="text-[10px] tracking-widest opacity-80 uppercase">KKU Road Alert · Officer</p>
-                <img src="https://ui-avatars.com/api/?name=Officer&background=fff&color=165C7D" class="w-8 h-8 rounded-full border-2 border-white">
-            </div>
-            <h1 class="text-2xl font-bold">ศูนย์ปฏิบัติการ</h1>
-        </div>
-        <!-- ใส่เนื้อหาย่อเพื่อความกระชับ (หน้าตามแบบเดิม) -->
-    </div>
-
-
     <!-- ==================== BOTTOM NAVIGATION ==================== -->
     <div id="bottom-nav" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 pb-safe z-50">
         <div class="max-w-md mx-auto flex justify-around items-center py-2 px-2">
@@ -245,9 +226,6 @@
             <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-inactive" onclick="switchTab('reports')">
                 <i class="fa-solid fa-clipboard-list text-lg mb-1"></i><span class="text-[10px]">เรื่องของฉัน</span>
             </div>
-            <div class="flex flex-col items-center p-2 cursor-pointer nav-item bottom-nav-inactive" onclick="toggleRole()">
-                <i class="fa-regular fa-user text-lg mb-1" id="role-icon"></i><span class="text-[10px]" id="role-text">จนท.</span>
-            </div>
         </div>
     </div>
 
@@ -257,10 +235,8 @@
     // =========================================================
     // ⚠️ ใส่ URL จาก Google Apps Script (Web App) ของคุณที่นี่ ⚠️
     // =========================================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec";
+    const WEB_APP_URL = "ใส่_URL_ของ_GOOGLE_APPS_SCRIPT_ตรงนี้_อีกครั้งนะครับ";
 
-
-    // ตั้งค่าพิกัดเริ่มต้น 
     const kkuLat = 16.4751;
     const kkuLon = 102.8224;
     let mapsInitialized = false;
@@ -272,24 +248,42 @@
 
     function initMaps() {
         if(mapsInitialized) return;
-        const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        
+        // 1. เตรียมลิงก์แผนที่ 2 แบบ (ปกติ และ ภูมิประเทศ)
+        const streetMapUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        const topoMapUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+
+        // สร้าง Layer
+        const streetLayerHome = L.tileLayer(streetMapUrl);
+        const streetLayerFull = L.tileLayer(streetMapUrl);
+        const topoLayerFull = L.tileLayer(topoMapUrl);
+        const streetLayerNav = L.tileLayer(streetMapUrl);
         const mapOptions = { zoomControl: false, attributionControl: false };
 
+        // --- แผนที่หน้า Home ---
         mapHome = L.map('map-home', mapOptions).setView([kkuLat, kkuLon], 15);
-        L.tileLayer(tileUrl).addTo(mapHome);
+        streetLayerHome.addTo(mapHome);
         L.marker([kkuLat, kkuLon], {icon: createIcon('blue')}).addTo(mapHome); 
 
-        mapFull = L.map('map-full', { zoomControl: true, attributionControl: false }).setView([kkuLat, kkuLon], 16);
-        L.tileLayer(tileUrl).addTo(mapFull);
+        // --- แผนที่หน้าใหญ่ (Map Full) ---
+        mapFull = L.map('map-full', { zoomControl: true, attributionControl: false }).setView([kkuLat, kkuLon], 15);
+        streetLayerFull.addTo(mapFull); 
         L.marker([kkuLat, kkuLon], {icon: createIcon('blue')}).addTo(mapFull); 
 
+        // สร้างปุ่มควบคุมให้เลือกประเภทแผนที่ได้
+        const baseMaps = {
+            "แผนที่ถนน (Street)": streetLayerFull,
+            "แผนที่ภูมิประเทศ (Topo)": topoLayerFull
+        };
+        L.control.layers(baseMaps).addTo(mapFull);
+
+        // --- แผนที่หน้านำทาง ---
         mapNav = L.map('map-nav', mapOptions).setView([kkuLat, kkuLon], 14);
-        L.tileLayer(tileUrl).addTo(mapNav);
+        streetLayerNav.addTo(mapNav);
 
         mapsInitialized = true;
     }
 
-    // ฟังก์ชันสลับหน้า 
     function switchTab(tabId) {
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('hide'));
         const navItems = document.querySelectorAll('.nav-item');
@@ -316,21 +310,9 @@
         }
         else if(tabId === 'report') {
             document.getElementById('view-report').classList.remove('hide');
-            // หน้าแจ้งปัญหา ไม่โชว์เมนู active ด้านล่าง
-        }
-        else if(tabId === 'officer-dashboard') {
-            document.getElementById('view-officer-dashboard').classList.remove('hide');
-            navItems[4].classList.add('bottom-nav-active'); navItems[4].classList.remove('bottom-nav-inactive');
         }
     }
 
-    function toggleRole() { switchTab('officer-dashboard'); }
-
-
-    // ==========================================
-    // ส่วนของการจัดการฟอร์มและอัปโหลดรูปภาพ
-    // ==========================================
-    
     function previewImage(event) {
         const file = event.target.files[0];
         if (file) {
@@ -372,7 +354,6 @@
         const file = fileInput.files[0];
         const reader = new FileReader();
 
-        // แสดงสถานะกำลังโหลด
         statusAlert.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
         statusAlert.classList.add('bg-blue-100', 'text-blue-800');
         statusAlert.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลดและบันทึกข้อมูล...';
@@ -403,12 +384,11 @@
                     statusAlert.classList.replace('text-blue-800', 'text-green-800');
                     statusAlert.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเรื่องร้องเรียนเรียบร้อยแล้ว!';
                     
-                    // รีเซ็ตฟอร์ม
                     setTimeout(() => {
                         removeImage(new Event('click'));
                         document.getElementById('descInput').value = "";
                         statusAlert.classList.add('hidden');
-                        switchTab('reports'); // พาไปหน้า "เรื่องของฉัน"
+                        switchTab('reports');
                     }, 2000);
                 } else {
                     throw new Error(data.message);
@@ -428,7 +408,6 @@
         reader.readAsDataURL(file);
     }
 
-    // เริ่มต้นแผนที่เมื่อเปิดเว็บ
     window.onload = () => {
         initMaps();
         switchTab('home');
