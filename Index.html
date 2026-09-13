@@ -299,6 +299,9 @@
 <script>
     // URL สำหรับ Google Apps Script
     const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec"; 
+    // ลิงก์ Google Drive ที่ผู้ใช้ให้มา สำหรับนำไปผูกกับหน้าที่ต้องการภายหลัง
+    const GOOGLE_DRIVE_LINK = "https://drive.google.com/file/d/10lb11Of2dvR81J4lS_abeZxhRhQtGG1u/view?usp=sharing";
+
 
     // DATA STORES
     let reportsData = [
@@ -352,7 +355,7 @@
         if(!syncInterval) {
             syncInterval = setInterval(() => {
                 fetchReportsFromSheets();
-            }, 10000); // ดึงข้อมูลใหม่ทุกๆ 10 วินาที
+            }, 5000); // ซิงก์ทุก 5 วินาที เพื่อให้หลายเครื่องเห็นข้อมูลใหม่เร็วขึ้น
         }
     }
 
@@ -480,12 +483,30 @@
             mapModalPick = L.map('map-modal-container', {zoomControl: true}).setView([selectedLat, selectedLon], 16); 
             L.tileLayer(satelliteUrl).addTo(mapModalPick);
             markerModalPick = L.marker([selectedLat, selectedLon], {icon: createIcon('red'), draggable: true}).addTo(mapModalPick);
-            markerModalPick.on('dragend', (e) => { const p = e.target.getLatLng(); markerReportMini.setLatLng(p); updateReportCoords(p.lat, p.lng); });
+            markerModalPick.on('dragend', (e) => {
+                const p = e.target.getLatLng();
+                markerReportMini.setLatLng(p);
+                updateReportCoords(p.lat, p.lng);
+            });
+
+            // แตะ/คลิกตรงไหนบนแผนที่ก็ปักหมุดตรงนั้นได้
+            mapModalPick.on('click', (e) => {
+                markerModalPick.setLatLng(e.latlng);
+                if (markerReportMini) markerReportMini.setLatLng(e.latlng);
+                updateReportCoords(e.latlng.lat, e.latlng.lng);
+            });
         } else {
             mapModalPick.setView([selectedLat, selectedLon], 16); markerModalPick.setLatLng([selectedLat, selectedLon]); setTimeout(() => mapModalPick.invalidateSize(), 200);
         }
     }
-    function closeFullMapModal() { document.getElementById('modal-map-pick').classList.add('hide'); mapReportMini.setView([selectedLat, selectedLon]); }
+    function closeFullMapModal() {
+        document.getElementById('modal-map-pick').classList.add('hide');
+        if (markerReportMini) markerReportMini.setLatLng([selectedLat, selectedLon]);
+        if (mapReportMini) {
+            mapReportMini.setView([selectedLat, selectedLon]);
+            setTimeout(() => mapReportMini.invalidateSize(), 150);
+        }
+    }
 
     // ================= GPS REAL-TIME TRACKING =================
     function startGpsTracking() {
