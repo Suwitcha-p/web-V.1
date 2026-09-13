@@ -298,7 +298,7 @@
 
 <script>
     // URL สำหรับ Google Apps Script
-    const GOOGLE_WEB_APP_URL = "ใส่_URL_ของ_GOOGLE_APPS_SCRIPT_ที่นี่"; 
+    const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec"; 
 
     // DATA STORES
     let reportsData = [
@@ -637,7 +637,7 @@
             
             if(!GOOGLE_WEB_APP_URL.includes("ใส่_URL")) {
                 try {
-                    await fetch(https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec, {
+                    await fetch(GOOGLE_WEB_APP_URL, {
                         method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: "update", id: item.id, status: newStatus, log: item.log })
                     });
