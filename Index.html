@@ -298,7 +298,7 @@
 
 <script>
     // URL สำหรับ Google Apps Script
-    const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyS9FYAVug-zhpiAtygRuIX3hWto7Wlhy3jSGSLVvMnBvWPz-JO6BX90wn9LIRPA17VmQ/exec"; 
+    const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4ys0dj4qjLm2RhW24yWqpJuUMWMSOTGWkfdunjCCPJ3xxLf5qpUCo5b7Sa7bqZRVxUQ/exec"; 
     // ลิงก์ Google Drive ที่ผู้ใช้ให้มา สำหรับนำไปผูกกับหน้าที่ต้องการภายหลัง
     const GOOGLE_DRIVE_LINK = "https://drive.google.com/file/d/10lb11Of2dvR81J4lS_abeZxhRhQtGG1u/view?usp=sharing";
 
@@ -331,7 +331,7 @@
         try {
             const response = await fetch(GOOGLE_WEB_APP_URL + "?action=read");
             const data = await response.json();
-            if(data && Array.isArray(data) && data.length > 0) {
+            if(data && Array.isArray(data)) {
                 reportsData = data;
                 updateMapMarkers();
                 updateOfficerMapMarkers();
